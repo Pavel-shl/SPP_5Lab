@@ -16,6 +16,8 @@ namespace DependencyInjectionTest
             dependencyConfig = new DependencyConfig();
         }
 
+
+        //Обычная ситуация
         [TestMethod]
         public void TestDependencyInjection()
         {
@@ -26,8 +28,7 @@ namespace DependencyInjectionTest
             Assert.IsInstanceOfType(res, typeof(TestClass));
         }
 
-        // тип зависимости может совпадать с типом реализации
-        // иногда это называют регистрацией "as self":
+        // Интерфейс и реализация один и тот же класс класс
         [TestMethod]
         public void TestRegistrationAsSelf()
         {
@@ -38,6 +39,8 @@ namespace DependencyInjectionTest
             Assert.IsInstanceOfType(res, typeof(TestClass));
         }
 
+
+        //Вложенный и основной интерфейсы
         [TestMethod]
         public void TestNestedDependency()
         {
@@ -53,6 +56,8 @@ namespace DependencyInjectionTest
             Assert.IsInstanceOfType(((TestNestedDependencyClass)res).Depend3, typeof(TestClass));
         }
 
+        // Тестирование незарегистрированной зависимости
+        // зависимость не регистрируется и получается ее реализация с помощью контейнера
         [TestMethod]
         public void TestNotregisteredType()
         {
@@ -63,6 +68,9 @@ namespace DependencyInjectionTest
 
         }
 
+        //Тестовая ситуация – регистрируется зависимость в необходимом фор-мате,
+        //после этого дважды получается реализация этой зависимости с
+        //помо-щью класса контейнера, c указанным временем жизни – singleton.
         [TestMethod]
         public void TestSingleton()
         {
@@ -73,6 +81,10 @@ namespace DependencyInjectionTest
             Assert.IsInstanceOfType(res1, typeof(TestClass));
             Assert.AreSame(res1, res2);
         }
+
+        // Тестовая ситуация – регистрируется зависимость в необходимом фор-мате,
+        // после этого дважды получается реализация этой зависимости с помо-щью класса контейнера,
+        // c указанным временем жизни – instance per depend-ency.
 
         [TestMethod]
         public void TestInstancePerDependency()
@@ -85,32 +97,14 @@ namespace DependencyInjectionTest
             Assert.AreNotSame(res1, res2);
         }
 
-        [TestMethod]
-        public void TestGenericType()
-        {
-            dependencyConfig.Register<IDepend<IDepend2>, Realization<IDepend2>>(ImplementationsTTL.Singleton);
-            dependencyConfig.Register<IDepend2, TestClass>(ImplementationsTTL.Singleton);
-            DependencyProvider provider = new DependencyProvider(dependencyConfig);
-            var res = provider.Resolve<IDepend<IDepend2>>();
-            Assert.IsNotNull(res);
-            Assert.IsInstanceOfType(res, typeof(Realization<IDepend2>));
 
-        }
+        //Тестирование получения всех реализаций зависимости
+        // Тестовая ситуация – регистрируется несколько реализаций
+        // для одного типа зависимости.После этого при получении
+        // реализации в контейнер пере-дается IEnumerable<тип зависимости>.
 
-        [TestMethod]
-        public void TestOpenGenericRealization()
-        {
-            dependencyConfig.Register<IDepend2, TestClass>(ImplementationsTTL.InstancePerDependency);
-            dependencyConfig.Register<IDepend3, TestClass>(ImplementationsTTL.InstancePerDependency);
 
-            dependencyConfig.Register(typeof(IDepend<>), typeof(Realization<>), ImplementationsTTL.InstancePerDependency);
-
-            DependencyProvider provider = new DependencyProvider(dependencyConfig);
-            var res = provider.Resolve<IDepend<IDepend3>>();
-            Assert.IsInstanceOfType(res, typeof(Realization<IDepend3>));
-        }
-
-        [TestMethod]
+       [TestMethod]
         public void TestTwoImplementations()
         {
             dependencyConfig.Register<IDepend2, TestClass>(ImplementationsTTL.Singleton);
@@ -125,27 +119,6 @@ namespace DependencyInjectionTest
             }
             Assert.AreEqual(count, 2);
         }
-
-        [TestMethod]
-        public void TestTwoImplementationsWithDifference()
-        {
-            dependencyConfig.Register<IDepend2, TestClass>(ImplementationsTTL.Singleton);
-            dependencyConfig.Register<IDepend2, TestClass2>(ImplementationsTTL.Singleton);
-
-            DependencyProvider provider = new DependencyProvider(dependencyConfig);
-
-            int? test2Numb = provider.GetRealizationNumber(typeof(IDepend2), typeof(TestClass2)),
-                test1Numb = provider.GetRealizationNumber(typeof(IDepend2), typeof(TestClass));
-            Assert.IsNotNull(test2Numb);
-            Assert.IsNotNull(test1Numb);
-            var res = provider.Resolve<IDepend2>(test2Numb.Value);
-            var res2 = provider.Resolve<IDepend2>(test1Numb.Value);
-            Assert.IsInstanceOfType(res, typeof(TestClass2));
-            Assert.IsInstanceOfType(res2, typeof(TestClass));
-        }
-
-    }
-
     
 
 
